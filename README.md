@@ -3,6 +3,7 @@ Nonparametric Density estimation of Identifiable mixture models from Grouped Obs
 
 ## Dependencies
 general: numpy, sklearn, scipy, pandas, tensorly, seaborn, matplotlib
+
 topic modeling experiment: polyglot, glob, nltk, STTM (GitHub repo given in Main paper)
 
 I have included STTM for convenience, but it is NOT my code. It is code accompanying a preprint with bibtex entry:
