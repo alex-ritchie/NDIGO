@@ -1,16 +1,38 @@
-#!/usr/bin/env python
-
 import numpy as np
 from sklearn.cluster import KMeans, MiniBatchKMeans
 from scipy.sparse.linalg import svds
 import scipy.optimize as sopt
 from copy import copy
 
-def clustNP(X, pair_ids, A0, w0, Z, G, Ci=None, stepsize=1, ss_decr=1, epoch_decr = 20, method='pgd', 
-            max_iter=100, f_tol=1e-10, grad_tol=1e-5, R=10, sigma=1.0, 
-            batch_size=16, backtrack=True, decay=0, momentum=0, large=False):
-    # A0 (M,K): matrix with initial alpha_i as rows
-    # w0 (M,): vector of initial mixture proportions
+def NDIGO(X, pair_ids, A0, w0, Z, G, Ci=None, stepsize=1, ss_decr=1, epoch_decr = 20, method='psgd', 
+            max_iter=100, f_tol=1e-10, sigma=1.0, batch_size=16, decay=0, momentum=0, large=False):
+    """
+    Inputs:
+        X (N,d):    data matrix
+        A0 (M,K):   matrix with initial alpha_i as rows
+        w0 (M,):    vector of initial mixture proportions
+        Z (K,d):    matrix of kernel centers
+        G (K,K):    Kernel matrix
+        Ci (K,K,N): Optionally pass the Ci matrix
+        stepsize:   the stepsize
+        ss_decr:    multiplicative step size decrement
+        epoch_decr: number of epochs between stepsize decrements
+        method:     'psgd'(projected stochastic gradiend descent) or 'pgd' (projected gradiend descent)
+        max_iter:   max number of epochs
+        f_tol:      stop if objective decreases by less than this amount over an epoch
+        sigma:      kernel width
+        batch_size: batch size
+        decay:      decay parameter for sgd
+        momentum:   momentum parameter for sgd
+        large:      if true, loads Ci more efficiently for large (in N) datasets
+    Returns:
+        f_star:       objective value of solution
+        A_star (M,K): matrix with solution alpha_i as rows
+        w_star:       vector of solutioin mixture proportions
+        Z (K,d):      matrix of kernel centers
+        n_iter:       number of epochs before stopping
+    """
+    
     
     #define some necessary variables
     fs = np.ones(5,)*np.inf; #pad 
@@ -30,11 +52,7 @@ def clustNP(X, pair_ids, A0, w0, Z, G, Ci=None, stepsize=1, ss_decr=1, epoch_dec
     delta_w = 0
     delta_A = 0
     order = np.random.permutation(n)
-    f_star = 0 
-    A_star = 0 
-    w_star = 0
     n_iter = 0 
-    #generate G, C, Z
     
     if method in 'psgd':
         #solve with projected stochastic gradient descent
@@ -73,7 +91,7 @@ def clustNP(X, pair_ids, A0, w0, Z, G, Ci=None, stepsize=1, ss_decr=1, epoch_dec
                         A[:,i] = proj_simplex(A[:,i] + delta_A[:,i])        
             n_iter += 1
 
-            #print details every epochs
+            #print details every epoch
             if batch_size*batch_num >= n:
                 #reset batches for next epoch
                 batch_num = 0
@@ -146,11 +164,8 @@ def clustNP(X, pair_ids, A0, w0, Z, G, Ci=None, stepsize=1, ss_decr=1, epoch_dec
  
     
 def gen_Z(X, R, sigma, method='k-means', random_state=0):
-    if method is 'k-centers':
-        Z = k_centers(X, R)
-    else:
-        kmeans = KMeans(n_clusters=R, n_init=100, random_state=random_state).fit(X)
-        Z = kmeans.cluster_centers_
+    kmeans = KMeans(n_clusters=R, n_init=100, random_state=random_state).fit(X)
+    Z = kmeans.cluster_centers_
     return Z
     
 def gen_ZG(X, R, sigma, Z=None, method='k-means', random_state=0):
@@ -158,9 +173,6 @@ def gen_ZG(X, R, sigma, Z=None, method='k-means', random_state=0):
         if R == X.shape[0]:
             Z = X
         else:
-#             if method in 'k-centers':
-#                 Z = k_centers(X, R)
-#             else:
             if X.shape[0]>5000:
                 kmeans = MiniBatchKMeans(n_clusters=R, random_state=random_state).fit(X)
                 Z = kmeans.cluster_centers_

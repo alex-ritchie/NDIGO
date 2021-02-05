@@ -5,7 +5,7 @@ from sklearn.mixture import GaussianMixture
 from sklearn.cluster import AgglomerativeClustering
 from numpy.linalg import cholesky, pinv
 import scipy
-from clustNP import gauss_kernal_mat
+from NDIGO import gauss_kernal_mat
 import tensorly as tl
 from scipy.spatial.distance import pdist, squareform
 
