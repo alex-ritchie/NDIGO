@@ -1,0 +1,15 @@
+.ipynb
+.ipynb_checkpoints/
+STTM-master/
+Supplementary/
+Untitled.ipynb
+__pycache__/
+glove10d.txt
+glove_cleaned.txt
+glove_mat.npy
+glove_mat_10d.npy
+magic04.data
+magic04.names
+troll-corpus.txt
+troll-corpus_old.txt
+tweets_preprocessed_lemmatized.npz
